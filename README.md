@@ -5,5 +5,5 @@
 <hr>
 Community maintained project (rip jerma 01/07/2025).
 
-Oeiginal by Pauleks (epic): 
+Original by Pauleks (epic): 
 - [jermacaption](https://github.com/pauleks/jermacaption)
