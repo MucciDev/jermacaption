@@ -1,201 +1,319 @@
 import { Browser, Page } from 'puppeteer';
+import { promises as fs } from 'fs';
+import * as path from 'path';
+import * as puppeteer from 'puppeteer';
 
-const path = require('path');
-const fs = require('fs/promises');
-const puppeteer = require('puppeteer');
+interface FontCache {
+  [key: string]: Promise<string>;
+}
 
-// Cache for fonts
-let ImpactFontPromise: Promise<string> | null = null;
-let ArialFontPromise: Promise<string> | null = null;
-let EmojiFontPromise: Promise<string> | null = null;
+interface BrowserPool {
+  browser: Browser | null;
+  page: Page | null;
+  inUse: boolean;
+  lastUsed: number;
+}
 
-// Lazily load fonts when needed
-const getImpactFont = async (): Promise<string> => {
-  if (!ImpactFontPromise) {
-    ImpactFontPromise = fs.readFile('./assets/fonts/Impact.ttf')
-      .then((buffer: Buffer) => buffer.toString('base64'));
-  }
-  return ImpactFontPromise as Promise<string>;
+const FONT_CACHE: FontCache = {};
+const BROWSER_POOL: BrowserPool = {
+  browser: null,
+  page: null,
+  inUse: false,
+  lastUsed: 0
 };
 
-const getArialFont = async (): Promise<string> => {
-  if (!ArialFontPromise) {
-    ArialFontPromise = fs.readFile('./assets/fonts/Arial.ttf')
-      .then((buffer: Buffer) => buffer.toString('base64'));
-  }
-  return ArialFontPromise as Promise<string>;
+const CONFIG = {
+  CANVAS_WIDTH: 800,
+  FONT_SIZE: 80,
+  PADDING: 20,
+  BROWSER_TIMEOUT: 30000,
+  PAGE_TIMEOUT: 15000,
+  BROWSER_IDLE_TIMEOUT: 300000, // 5 minutes
+  EMOJI_SIZE: 60,
+  EMOJI_MARGIN: 3
 };
 
-const getEmojiFont = async (): Promise<string> => {
-  if (!EmojiFontPromise) {
-    EmojiFontPromise = fs.readFile('./assets/fonts/Emoji.ttf')
-      .then((buffer: Buffer) => buffer.toString('base64'));
-  }
-  return EmojiFontPromise as Promise<string>;
+const FONT_PATHS = {
+  impact: './assets/fonts/Impact.ttf',
+  arial: './assets/fonts/Arial.ttf',
+  emoji: './assets/fonts/Emoji.ttf'
 };
 
+const loadFont = async (fontName: string, fontPath: string): Promise<string> => {
+  if (!FONT_CACHE[fontName]) {
+    FONT_CACHE[fontName] = fs.readFile(fontPath)
+      .then(buffer => buffer.toString('base64'))
+      .catch(error => {
+        delete FONT_CACHE[fontName];
+        throw new Error(`Failed to load font ${fontName}: ${error.message}`);
+      });
+  }
+  return FONT_CACHE[fontName];
+};
 
-// Browser instance cache
-let _page: Page | null = null;
-
-const getPage = async (): Promise<Page> => {
-  if (_page) return _page;
-  const browser: Browser = await puppeteer.launch({ 
-    product: 'chrome', 
-    args: ['--no-sandbox'] 
+const initializeBrowser = async (): Promise<Browser> => {
+  const browser = await puppeteer.launch({
+    product: 'chrome',
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--disable-gpu',
+      '--no-zygote',
+      '--single-process'
+    ],
+    headless: true,
+    timeout: CONFIG.BROWSER_TIMEOUT
   });
-  _page = await browser.newPage();
-  return _page;
+
+  return browser;
 };
 
-/**
- * Processes Discord emoji markup and converts it to HTML img tags
- * Format: <a:name:id> for animated or <:name:id> for static emoji
- */
-const processEmojis = (input: string): string => {
-  // Regex to match Discord emoji format
-  const emojiRegex = /<(a?):([^:]+):(\d+)>/g;
+const getBrowserPage = async (): Promise<Page> => {
+  const now = Date.now();
   
-  return input.replace(emojiRegex, (match, animated, name, id) => {
-    // For this implementation, we'll use PNG for all emojis as you mentioned they're static
-    const emojiUrl = `https://cdn.discordapp.com/emojis/${id}.png?size=64`;
-    return `<img src="${emojiUrl}" alt="${name}" style="height:60px;vertical-align:middle;margin:0 3px;" />`;
-  });
-};
+  if (BROWSER_POOL.browser && BROWSER_POOL.page && !BROWSER_POOL.inUse) {
+    BROWSER_POOL.inUse = true;
+    BROWSER_POOL.lastUsed = now;
+    return BROWSER_POOL.page;
+  }
 
-// Character escaping for HTML
-const charactersMap: Record<string, string> = {
-  "&": "&amp;",
-  "<": "&lt;",
-  ">": "&gt;",
-  '"': '&quot;',
-  "'": '&#39;',
-  "/": '&#x2F;'
-};
+  if (BROWSER_POOL.browser && BROWSER_POOL.inUse) {
+    throw new Error('Browser is currently in use');
+  }
 
-const sanitizeInput = (input: string): string => {
-  return input.replace(/[&<>"'\/]/g, (key) => charactersMap[key as keyof typeof charactersMap]);
-};
-
-// Generate HTML template for rendering
-const getHTML = async (input: string, width: number): Promise<string> => {
-  const impactFont = await getImpactFont();
-  const arialFont = await getArialFont();
-  const emojiFont = await getEmojiFont();
-
-  // First process emojis, then sanitize the rest of the text
-  // We need to do this before sanitizing to preserve the emoji markup format
-  const processedText = processEmojis(input);
-  
-  // Since processEmojis already replaced the emoji tags with valid HTML,
-  // we need to ensure we don't sanitize those parts while still protecting other text
-  // This is a bit tricky, but we'll use a placeholder approach
-  
-  // For simplicity in this example, let's just use the processed text directly
-  // In a production environment, you might want a more sophisticated approach
-  
-  return `<html>
-    <head>
-        <style>
-            @font-face {
-                font-family: 'Impact';
-                src: url('data:font/ttf;base64,${impactFont}');
-            }
-    
-            @font-face {
-                font-family: 'Arial';
-                src: url('data:font/ttf;base64,${arialFont}');
-            }
-
-            @font-face {
-                font-family: 'Emoji';
-                src: url('data:font/ttf;base64,${emojiFont}');
-            }
-    
-            h1 {
-                font-family: 'Emoji', 'Impact', 'Arial';
-                font-size: 80px;
-                font-weight: normal;
-                color: black;
-                padding: 0;
-                margin: 10px 0;
-                word-wrap: break-word;
-                line-height: 1.2;
-            }
-
-            div {
-                margin: 10px;
-                background-color: white;
-            }
-    
-            html, body {
-                text-align: center;
-                width: ${width}px;
-                margin: 0;
-                padding: 0;
-                background-color: white;
-            }
-        </style>
-    </head>
-    <body>
-        <div><h1>${processedText}</h1></div>
-    </body>
-    </html>`;
-};
-
-/**
- * Generates an image with the given text
- * @param {string} text - The text to render in the image
- * @param {string} id - Unique identifier for the image
- * @returns {Promise<string>} - Path to the generated image
- */
-const generateImage = async (text: string, id: string): Promise<string> => {
   try {
-    // Prepare output directory
-    const textsDir = './_temp/texts';
-    try {
-      await fs.access(textsDir);
-    } catch (err) {
-      // Create directory if it doesn't exist
-      await fs.mkdir(textsDir, { recursive: true });
+    if (BROWSER_POOL.browser) {
+      await BROWSER_POOL.browser.close();
+    }
+  } catch (error) {
+    console.warn('Error closing old browser:', error);
+  }
+
+  const browser = await initializeBrowser();
+  const page = await browser.newPage();
+  
+  await page.setDefaultNavigationTimeout(CONFIG.PAGE_TIMEOUT);
+  await page.setDefaultTimeout(CONFIG.PAGE_TIMEOUT);
+
+  BROWSER_POOL.browser = browser;
+  BROWSER_POOL.page = page;
+  BROWSER_POOL.inUse = true;
+  BROWSER_POOL.lastUsed = now;
+
+  return page;
+};
+
+const releaseBrowserPage = (): void => {
+  BROWSER_POOL.inUse = false;
+  BROWSER_POOL.lastUsed = Date.now();
+};
+
+const processDiscordEmojis = (input: string): string => {
+  const emojiRegex = /<(a?):([^:]+):(\d+)>/g;
+  return input.replace(emojiRegex, (match, animated, name, id) => {
+    const emojiUrl = `https://cdn.discordapp.com/emojis/${id}.png?size=64`;
+    return `<img src="${emojiUrl}" alt="${name}" style="height:${CONFIG.EMOJI_SIZE}px;vertical-align:middle;margin:0 ${CONFIG.EMOJI_MARGIN}px;" crossorigin="anonymous" />`;
+  });
+};
+
+const sanitizeHtml = (input: string): string => {
+  const charactersMap: Record<string, string> = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': '&quot;',
+    "'": '&#39;',
+    "/": '&#x2F;'
+  };
+  
+  return input.replace(/[&<>"'\/]/g, (char) => charactersMap[char]);
+};
+
+const processText = (input: string): string => {
+  const processedEmojis = processDiscordEmojis(input);
+  const parts = processedEmojis.split(/(<img[^>]*>)/);
+  
+  return parts.map(part => {
+    if (part.startsWith('<img')) {
+      return part;
+    }
+    return sanitizeHtml(part);
+  }).join('');
+};
+
+const generateHtml = async (text: string, width: number): Promise<string> => {
+  const [impactFont, arialFont, emojiFont] = await Promise.all([
+    loadFont('impact', FONT_PATHS.impact),
+    loadFont('arial', FONT_PATHS.arial),
+    loadFont('emoji', FONT_PATHS.emoji)
+  ]);
+
+  const processedText = processText(text);
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @font-face {
+      font-family: 'Impact';
+      src: url('data:font/ttf;base64,${impactFont}');
+      font-display: block;
+    }
+    @font-face {
+      font-family: 'Arial';
+      src: url('data:font/ttf;base64,${arialFont}');
+      font-display: block;
+    }
+    @font-face {
+      font-family: 'Emoji';
+      src: url('data:font/ttf;base64,${emojiFont}');
+      font-display: block;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      width: ${width}px;
+      background-color: white;
+      font-family: 'Emoji', 'Impact', 'Arial', sans-serif;
+    }
+    
+    .container {
+      margin: ${CONFIG.PADDING / 2}px;
+      background-color: white;
+      text-align: center;
+    }
+    
+    .text {
+      font-size: ${CONFIG.FONT_SIZE}px;
+      font-weight: normal;
+      color: black;
+      line-height: 1.2;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      hyphens: auto;
+    }
+    
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="text">${processedText}</div>
+  </div>
+</body>
+</html>`;
+};
+
+const ensureDirectoryExists = async (dirPath: string): Promise<void> => {
+  try {
+    await fs.access(dirPath);
+  } catch {
+    await fs.mkdir(dirPath, { recursive: true });
+  }
+};
+
+const generateImage = async (text: string, id: string): Promise<string> => {
+  if (!text || text.trim().length === 0) {
+    throw new Error('Text cannot be empty');
+  }
+
+  if (text.length > 5000) {
+    throw new Error('Text is too long');
+  }
+
+  const textsDir = './_temp/texts';
+  const outputPath = path.join(textsDir, `${id}-text.png`);
+
+  try {
+    await ensureDirectoryExists(textsDir);
+    
+    const html = await generateHtml(text, CONFIG.CANVAS_WIDTH);
+    const page = await getBrowserPage();
+
+    await page.setContent(html, { 
+      waitUntil: ['networkidle0', 'domcontentloaded'],
+      timeout: CONFIG.PAGE_TIMEOUT
+    });
+
+    await page.setViewport({ 
+      width: CONFIG.CANVAS_WIDTH, 
+      height: 100,
+      deviceScaleFactor: 1
+    });
+
+    const container = await page.$('.container');
+    if (!container) {
+      throw new Error('Could not find container element');
     }
 
-    // Set initial canvas width - matching your TS implementation
-    const width = 800;
-    const html = await getHTML(text, width);
+    const boundingBox = await container.boundingBox();
+    if (!boundingBox) {
+      throw new Error('Could not get container bounding box');
+    }
 
-    // Get browser page
-    const page = await getPage();
+    const finalHeight = Math.ceil(boundingBox.height) + CONFIG.PADDING;
     
-    // Set longer timeout and wait for network idle to ensure emojis load
-    await page.setDefaultNavigationTimeout(30000);
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-    
-    // First set a small height to calculate the actual required height
-    await page.setViewport({ width: width, height: 10 });
-    const elem = await page.$('div');
-    if (!elem) throw new Error('Could not find div element');
-    
-    const boundingBox = await elem.boundingBox();
-    if (!boundingBox) throw new Error('Could not get bounding box');
-    
-    // Now set the real height and capture screenshot
-    await page.setViewport({ 
-      width: width, 
-      height: Math.round(boundingBox.height) + 20 // Add 20px padding
+    await page.setViewport({
+      width: CONFIG.CANVAS_WIDTH,
+      height: finalHeight,
+      deviceScaleFactor: 1
     });
-    
-    const outputPath = path.join(textsDir, `${id}-text.png`);
-    await page.screenshot({ 
+
+    await page.screenshot({
       path: outputPath,
-      omitBackground: false
+      type: 'png',
+      omitBackground: false,
+      clip: {
+        x: 0,
+        y: 0,
+        width: CONFIG.CANVAS_WIDTH,
+        height: finalHeight
+      }
     });
-    
+
     return outputPath;
-  } catch (err) {
-    console.error('Error generating image:', err);
-    throw err;
+  } catch (error) {
+    console.error(`Error generating image for ${id}:`, error);
+    throw new Error(`Failed to generate image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  } finally {
+    releaseBrowserPage();
   }
 };
+
+const cleanupBrowser = async (): Promise<void> => {
+  if (BROWSER_POOL.browser && !BROWSER_POOL.inUse) {
+    try {
+      await BROWSER_POOL.browser.close();
+    } catch (error) {
+      console.warn('Error closing browser during cleanup:', error);
+    } finally {
+      BROWSER_POOL.browser = null;
+      BROWSER_POOL.page = null;
+    }
+  }
+};
+
+setInterval(async () => {
+  const now = Date.now();
+  if (BROWSER_POOL.browser && 
+      !BROWSER_POOL.inUse && 
+      now - BROWSER_POOL.lastUsed > CONFIG.BROWSER_IDLE_TIMEOUT) {
+    await cleanupBrowser();
+  }
+}, 60000);
+
+process.on('SIGINT', cleanupBrowser);
+process.on('SIGTERM', cleanupBrowser);
 
 export { generateImage };
