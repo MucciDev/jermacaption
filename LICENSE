@@ -1,75 +1,100 @@
-Jerma-1.0 License
+Jerma-1.1 License
+=================
 
 Copyright (c) 2025 Caption It Jerma (jermacaption)
 
 TERMS AND CONDITIONS FOR USE, MODIFICATION, AND DISTRIBUTION
+------------------------------------------
 
 1. Definitions
+--------------
 
-"Software" refers to the Caption It Jerma Discord bot, including all source code, documentation, assets, and associated files.
+1.1 “Software”  
+    The Caption It Jerma Discord bot, including all source code, documentation, assets, and associated files.
 
-"Original Work" refers to the initial version created by the original author (pauleks).
+1.2 “Original Work”  
+    The initial version created by the original author (pauleks).
 
-"Derivative Work" refers to any modification, enhancement, or adaptation of the Software.
+1.3 “Derivative Work”  
+    Any modification, enhancement, translation, patch, or adaptation of the Software.
 
-"Distribution" means making the Software available to third parties.
+1.4 “Distribute”  
+    To make the Software or Derivative Works available to any third party by sale, rental, license, or other means.
 
-"Commercial Use" means any use primarily intended for commercial advantage or monetary compensation.
+1.5 “Commercial Use”  
+    Use of the Software or Derivative Works in any product, service, or offering that generates revenue or direct commercial benefit, whether by sale, subscription, advertising, or other means.  
+    “Primary Component” means the Software constitutes a central or core feature that attracts users or defines the offering.
+
+1.6 “Donation”  
+    Voluntary financial support provided to maintain or develop the Software, without exclusive features or obligations.
 
 2. Grant of Rights
+------------------
 
-Subject to the terms and conditions of this license, permission is granted to:
+Subject to these terms, you are hereby granted a worldwide, royalty‑free, non‑exclusive license to:
 
-- Use the Software for personal, educational, or non-commercial purposes
-- Study and examine the source code
-- Modify and create derivative works
-- Distribute copies of the original Software
-- Distribute derivative works under the same license terms
+- Use the Software for any purpose, including personal, educational, research, internal business operations, or non‑commercial community activities.  
+- Study and examine the Software’s source code.  
+- Modify the Software and create Derivative Works.  
+- Distribute verbatim copies of the Original Work and Derivative Works, provided all terms below are met.
 
-3. Restrictions
+3. Commercial Use
+-----------------
 
-The Software and any derivative works CANNOT be:
-- Made proprietary or closed-source
-- Distributed without source code
-- Licensed under different terms that would restrict these freedoms
-- Incorporated into proprietary software without making the entire combined work available under this license
-- Sold, licensed, or otherwise monetized directly
-- Used as a primary component of a commercial service
-- Distributed as part of a paid software package
-- Used to generate revenue through advertising, subscriptions, or other commercial means
+You may **not** use the Software or Derivative Works as a primary component of any commercial product or service, or otherwise exploit it for direct or indirect monetary gain, except as follows:
 
-Exception: Voluntary donations to support development and maintenance are permitted, provided they do not create an obligation for the donor or exclusive access to features.
+- You may offer the Software or Derivative Works as part of an offering that includes other major, separate software components, provided the Software is neither the advertised focal point nor the main driver of revenue.  
+- You may accept Donations, provided:  
+  - No donor receives exclusive features, access, or obligations.  
+  - Donation requests are clearly labeled “voluntary” and do not create user obligations.
 
-4. Attribution Requirements
+4. Source Code Availability
+---------------------------
 
-All copies, modifications, and derivative works MUST:
-- Include this license in its entirety
-- Provide clear attribution to the Original Work and its creator (pauleks)
-- Maintain all existing copyright notices and author credits
-- Clearly identify any modifications made to the original code
-- Include a prominent notice stating the software is licensed under the Jerma-1.0 License
+Any distribution of the Software or Derivative Works **must** include:
 
-5. Source Code Availability
+- Complete source code in a human‑readable form.  
+- Build scripts and instructions sufficient to reproduce the distributed binaries.  
+- A publicly accessible code repository (e.g., GitHub, GitLab, or equivalent) that remains available for at least **five (5) years** from the date of distribution.
 
-Any distribution of the Software or derivative works MUST:
-- Include the complete source code
-- Make the source code freely accessible
-- Provide the source code in a format that allows modification
-- Ensure the source code remains publicly available for at least 3 years after distribution
+5. Attribution & Notices
+------------------------
 
-6. Derivative Works
+All copies and Derivative Works **must**:
 
-Derivative works are permitted under the following conditions:
-- Must be licensed under this same Jerma-1.0 License
-- Must clearly identify modifications and additions
-- Must maintain attribution to the Original Work
-- Must remain free and open source
-- Cannot be used to circumvent any restrictions of this license
+1. Include this full license text.  
+2. Retain all existing copyright notices.  
+3. Clearly identify the Original Work’s author (pauleks).  
+4. Prominently display any modifications, including author and date, in a `CHANGES.md` or similar file.  
+5. Add a notice in each source file header or documentation stating:  
+   “This software is licensed under the Jerma-1.1 License (see LICENSE file for details).”
 
-7. Termination
+6. Patent Grant
+---------------
 
-This license automatically terminates if you fail to comply with any of its terms. Upon termination, you must cease all use of the Software, delete all copies in your possession, stop any further distribution, and notify any recipients of derivative works about the termination.
+Contributors to the Software hereby grant you a perpetual, worldwide, royalty‑free, non‑exclusive patent license under any patent claims they control which are necessarily infringed by their contributions or by the Software as a whole.
 
-8. Disclaimer of Warranty
+7. No Additional Restrictions
+-----------------------------
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+You may not impose any further restrictions on the exercise of the rights granted herein. This includes, but is not limited to, imposing digital rights management (DRM), closing the source, or changing the license to a more restrictive one.
+
+8. Enforcement & Termination
+----------------------------
+
+- Any violation of these terms **automatically** terminates your rights under this license.  
+- Upon termination you must:  
+  - Cease all use of the Software.  
+  - Remove all copies of the Software and Derivative Works from your systems.  
+  - Provide written notice of termination to anyone you have distributed the Software or Derivative Works to.  
+- If you believe a termination is in error, you may submit a dispute notice in writing to the copyright holder; they will have thirty (30) days to respond before the termination remains in effect.
+
+9. Disclaimer of Warranty
+-------------------------
+
+THE SOFTWARE IS PROVIDED “AS IS,” WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT. IN NO EVENT SHALL AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIMS, DAMAGES, OR OTHER LIABILITY ARISING FROM THE USE OR DISTRIBUTION OF THE SOFTWARE.
+
+10. Limitation of Liability
+---------------------------
+
+IN NO EVENT WILL AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOSS OF PROFITS, DATA, OR USE, ARISING OUT OF OR RELATED TO THE SOFTWARE.
